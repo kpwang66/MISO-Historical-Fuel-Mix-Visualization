@@ -111,9 +111,11 @@ ax = plt.subplot(111)
 # ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 
 # %% Streamlit
-st.set_page_config(page_title="MISO Fuel Mix Dashboard", page_icon=":bar_chart:", layout="wide")
+st.set_page_config(page_title="MISO Historical Fuel Mix Visualization", page_icon=":bar_chart:", layout="wide")
 
 # Streamlit Sidebar
+st.sidebar.title('MISO Historical Fuel Mix Visualization')
+
 st.sidebar.header('Select Filters Here:')
 
 regions = st.sidebar.multiselect(
@@ -130,10 +132,19 @@ max_date = datetime.fromisoformat(df['MarketEndDatetime'].max())
 select_day = st.sidebar.date_input(
      "Select date", value=default_date, min_value=min_date, max_value=max_date)
 
-binning = st.sidebar.selectbox(
-    "Select binning (under construction, doesn't work)",
-    options=["Day", "Week", "Month"]
-)
+# binning = st.sidebar.selectbox(
+#     "Select binning (under construction, doesn't work)",
+#     options=["Day", "Week", "Month"]
+# )
+
+st.sidebar.header('Description')
+st.sidebar.markdown('''In this app, you can explore the hourly generation fuel mix for 
+                    any MISO region on any day in 2021.  I will be adding data from more 
+                    years as well as gradually adding more functionality, including the 
+                    ability to aggregate the data in larger temporal bins, so you can 
+                    see the fuel mix change over weeks and months.''')
+st.sidebar.markdown('''For more information, see this project's [Github repo page](https://github.com/kpwang66/MISO-Historical-Fuel-Mix-Visualization).
+''')
 
 # %%
 
