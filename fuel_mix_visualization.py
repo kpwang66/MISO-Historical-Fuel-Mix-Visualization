@@ -11,8 +11,8 @@ import sqlite3
 from sqlalchemy import create_engine
 import os
 from datetime import datetime
-import plotly.express as px
-import plotly.graph_objects as go
+# import plotly.express as px
+# import plotly.graph_objects as go
 import streamlit as st
 
 def get_clean_hist_fuel_mix(link, filename):
