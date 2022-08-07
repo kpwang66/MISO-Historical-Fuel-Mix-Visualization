@@ -53,142 +53,143 @@ def get_clean_hist_fuel_mix(link, filename):
 
     return df
 
+if __name__ = '__main__':
 
-# %% Find SQLite DB or get fresh data
-link = "https://docs.misoenergy.org/marketreports/historical_gen_fuel_mix_2021.xlsx"
-# Above link can be found here: 
-# https://www.misoenergy.org/markets-and-operations/real-time--market-data/market-reports/#nt=%2FMarketReportType%3ASummary%2FMarketReportName%3AHistorical%20Generation%20Fuel%20Mix%20(xlsx)&t=10&p=0&s=MarketReportPublished&sd=desc
-db_name = "historical_fuel_mix.sqlite"
+    # %% Find SQLite DB or get fresh data
+    link = "https://docs.misoenergy.org/marketreports/historical_gen_fuel_mix_2021.xlsx"
+    # Above link can be found here: 
+    # https://www.misoenergy.org/markets-and-operations/real-time--market-data/market-reports/#nt=%2FMarketReportType%3ASummary%2FMarketReportName%3AHistorical%20Generation%20Fuel%20Mix%20(xlsx)&t=10&p=0&s=MarketReportPublished&sd=desc
+    db_name = "historical_fuel_mix.sqlite"
 
-abspath = os.path.abspath(__file__)
-dname = os.path.dirname(abspath)
-os.chdir(dname)
+    abspath = os.path.abspath(__file__)
+    dname = os.path.dirname(abspath)
+    os.chdir(dname)
 
-# Check if the database file exists.  If not, re-download a fresh one from the link.
-if not os.path.exists(db_name):
-    print("Database file not found.  Importing fresh data.")
-    df = get_clean_hist_fuel_mix(link, db_name)
-
-
-# %% Load the SQLite Database
-conn = sqlite3.connect(db_name)
-c = conn.cursor()
-
-df = pd.read_sql("""select * from "Historical Fuel Generation Mix";""", conn, parse_dates=[ \
-    "Market Date"])
+    # Check if the database file exists.  If not, re-download a fresh one from the link.
+    if not os.path.exists(db_name):
+        print("Database file not found.  Importing fresh data.")
+        df = get_clean_hist_fuel_mix(link, db_name)
 
 
-# %% Plot production of first day over the hour (for now)
+    # %% Load the SQLite Database
+    conn = sqlite3.connect(db_name)
+    c = conn.cursor()
 
-# date = '2021-05-01'
-# regions=["North", "South", "Central"]
-# df_day = pd.read_sql(f"""SELECT * FROM "Historical Fuel Generation Mix"
-#                         WHERE DATE(MarketEndDatetime)='{date}'
-#                         AND "Region" IN {tuple(regions)};""", conn)
+    df = pd.read_sql("""select * from "Historical Fuel Generation Mix";""", conn, parse_dates=[ \
+        "Market Date"])
 
-fuel_types = df["Fuel Type"].unique()
-display_vec_dict = {}
-# display_vec_dict["Time"] = [datetime.fromisoformat(x) for x in df_day["MarketEndDatetime"].unique()]
 
-# for fuel in fuel_types:
-#     display_vec_dict[fuel] = df_day.query(f'`Fuel Type`=="{fuel}"').groupby('MarketEndDatetime').sum()["DA Cleared UDS Generation"].to_numpy()
+    # %% Plot production of first day over the hour (for now)
 
-fig = plt.figure()
-ax = plt.subplot(111)
+    # date = '2021-05-01'
+    # regions=["North", "South", "Central"]
+    # df_day = pd.read_sql(f"""SELECT * FROM "Historical Fuel Generation Mix"
+    #                         WHERE DATE(MarketEndDatetime)='{date}'
+    #                         AND "Region" IN {tuple(regions)};""", conn)
 
-# px = 1/plt.rcParams['figure.dpi']
-# fig, ax = plt.subplots(figsize=(400*px, 300*px))
+    fuel_types = df["Fuel Type"].unique()
+    display_vec_dict = {}
+    # display_vec_dict["Time"] = [datetime.fromisoformat(x) for x in df_day["MarketEndDatetime"].unique()]
 
-# ax.stackplot(display_vec_dict['Time'], \
-#         display_vec_dict['Coal'],\
-#         display_vec_dict['Gas'],\
-#         display_vec_dict['Wind'],\
-#         display_vec_dict['Nuclear'],\
-#         display_vec_dict['Hydro'],\
-#         display_vec_dict['Solar'],\
-#         display_vec_dict['Other'], labels=fuel_types)
+    # for fuel in fuel_types:
+    #     display_vec_dict[fuel] = df_day.query(f'`Fuel Type`=="{fuel}"').groupby('MarketEndDatetime').sum()["DA Cleared UDS Generation"].to_numpy()
 
-# ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+    fig = plt.figure()
+    ax = plt.subplot(111)
 
-# %% Streamlit
-st.set_page_config(page_title="MISO Historical Fuel Mix Visualization", page_icon=":bar_chart:", layout="wide")
+    # px = 1/plt.rcParams['figure.dpi']
+    # fig, ax = plt.subplots(figsize=(400*px, 300*px))
 
-# Streamlit Sidebar
-st.sidebar.title('MISO Historical Fuel Mix Visualization')
+    # ax.stackplot(display_vec_dict['Time'], \
+    #         display_vec_dict['Coal'],\
+    #         display_vec_dict['Gas'],\
+    #         display_vec_dict['Wind'],\
+    #         display_vec_dict['Nuclear'],\
+    #         display_vec_dict['Hydro'],\
+    #         display_vec_dict['Solar'],\
+    #         display_vec_dict['Other'], labels=fuel_types)
 
-st.sidebar.header('Select Filters Here:')
+    # ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 
-regions = st.sidebar.multiselect(
-    "Select regions to include",
-    options=df["Region"].unique(), 
-    # default='Central'
-    default=df["Region"].unique()
-)
+    # %% Streamlit
+    st.set_page_config(page_title="MISO Historical Fuel Mix Visualization", page_icon=":bar_chart:", layout="wide")
 
-default_date = datetime.fromisoformat('2021-01-01')
-min_date = datetime.fromisoformat(df['MarketEndDatetime'].min())
-max_date = datetime.fromisoformat(df['MarketEndDatetime'].max())
+    # Streamlit Sidebar
+    st.sidebar.title('MISO Historical Fuel Mix Visualization')
 
-select_day = st.sidebar.date_input(
-     "Select date", value=default_date, min_value=min_date, max_value=max_date)
+    st.sidebar.header('Select Filters Here:')
 
-# binning = st.sidebar.selectbox(
-#     "Select binning (under construction, doesn't work)",
-#     options=["Day", "Week", "Month"]
-# )
+    regions = st.sidebar.multiselect(
+        "Select regions to include",
+        options=df["Region"].unique(), 
+        # default='Central'
+        default=df["Region"].unique()
+    )
 
-st.sidebar.header('Description')
-st.sidebar.markdown('''In this app, you can explore the hourly generation fuel mix for 
-                    any MISO region on any day in 2021.  I will be adding data from more 
-                    years as well as gradually adding more functionality, including the 
-                    ability to aggregate the data in larger temporal bins, so you can 
-                    see the fuel mix change over weeks and months.''')
-st.sidebar.markdown('''For more information, see this project's [Github repo page](https://github.com/kpwang66/MISO-Historical-Fuel-Mix-Visualization).
-''')
+    default_date = datetime.fromisoformat('2021-01-01')
+    min_date = datetime.fromisoformat(df['MarketEndDatetime'].min())
+    max_date = datetime.fromisoformat(df['MarketEndDatetime'].max())
 
-# %%
+    select_day = st.sidebar.date_input(
+        "Select date", value=default_date, min_value=min_date, max_value=max_date)
 
-date = select_day.strftime("%Y-%m-%d")
-SQL_query = f"""SELECT * FROM "Historical Fuel Generation Mix"
-                        WHERE DATE(MarketEndDatetime)='{date}'
-                        AND "Region" IN {tuple(regions)};"""
-SQL_query = SQL_query.replace(',)', ')')
-df_day = pd.read_sql(SQL_query, conn)
+    # binning = st.sidebar.selectbox(
+    #     "Select binning (under construction, doesn't work)",
+    #     options=["Day", "Week", "Month"]
+    # )
 
-display_vec_dict["Datetime"] = [datetime.fromisoformat(x) for x in df_day["MarketEndDatetime"].unique()]
+    st.sidebar.header('Description')
+    st.sidebar.markdown('''In this app, you can explore the hourly generation fuel mix for 
+                        any MISO region on any day in 2021.  I will be adding data from more 
+                        years as well as gradually adding more functionality, including the 
+                        ability to aggregate the data in larger temporal bins, so you can 
+                        see the fuel mix change over weeks and months.''')
+    st.sidebar.markdown('''For more information, see this project's [Github repo page](https://github.com/kpwang66/MISO-Historical-Fuel-Mix-Visualization).
+    ''')
 
-display_vec_dict["Time"] = np.array([str(x.time()) for x in display_vec_dict["Datetime"]])
+    # %%
 
-for fuel in fuel_types:
-    display_vec_dict[fuel] = df_day.query(f'`Fuel Type`=="{fuel}"').groupby('MarketEndDatetime').sum()["DA Cleared UDS Generation"].to_numpy()
+    date = select_day.strftime("%Y-%m-%d")
+    SQL_query = f"""SELECT * FROM "Historical Fuel Generation Mix"
+                            WHERE DATE(MarketEndDatetime)='{date}'
+                            AND "Region" IN {tuple(regions)};"""
+    SQL_query = SQL_query.replace(',)', ')')
+    df_day = pd.read_sql(SQL_query, conn)
 
-    if len(display_vec_dict[fuel]) == 0:
-        display_vec_dict[fuel] = np.zeros((1, 23))
+    display_vec_dict["Datetime"] = [datetime.fromisoformat(x) for x in df_day["MarketEndDatetime"].unique()]
 
-# %% 
+    display_vec_dict["Time"] = np.array([str(x.time()) for x in display_vec_dict["Datetime"]])
 
-ax.stackplot(display_vec_dict['Time'], \
-        display_vec_dict['Coal'],\
-        display_vec_dict['Gas'],\
-        display_vec_dict['Wind'],\
-        display_vec_dict['Nuclear'],\
-        display_vec_dict['Hydro'],\
-        display_vec_dict['Solar'],\
-        display_vec_dict['Other'], labels=fuel_types)
+    for fuel in fuel_types:
+        display_vec_dict[fuel] = df_day.query(f'`Fuel Type`=="{fuel}"').groupby('MarketEndDatetime').sum()["DA Cleared UDS Generation"].to_numpy()
 
-ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+        if len(display_vec_dict[fuel]) == 0:
+            display_vec_dict[fuel] = np.zeros((1, 23))
 
-ax.set_title('MISO Historical Fuel Mix: ' + date)
-ax.set_ylabel('DA Cleared UDS Generation [MW]')
-ax.set_xlabel('Hour Ending')
-plt.xticks(rotation = 45)
+    # %% 
 
-# Replace xtick datetimes to ints for hour of day
-xtick_labels = list(range(1, 24, 2))
-plt.xticks(xtick_labels)
+    ax.stackplot(display_vec_dict['Time'], \
+            display_vec_dict['Coal'],\
+            display_vec_dict['Gas'],\
+            display_vec_dict['Wind'],\
+            display_vec_dict['Nuclear'],\
+            display_vec_dict['Hydro'],\
+            display_vec_dict['Solar'],\
+            display_vec_dict['Other'], labels=fuel_types)
 
-plt.show()
-st.pyplot(fig)
+    ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 
-# pdb.set_trace()
-# %%
+    ax.set_title('MISO Historical Fuel Mix: ' + date)
+    ax.set_ylabel('DA Cleared UDS Generation [MW]')
+    ax.set_xlabel('Hour Ending')
+    plt.xticks(rotation = 45)
+
+    # Replace xtick datetimes to ints for hour of day
+    xtick_labels = list(range(1, 24, 2))
+    plt.xticks(xtick_labels)
+
+    plt.show()
+    st.pyplot(fig)
+
+    # pdb.set_trace()
+    # %%
