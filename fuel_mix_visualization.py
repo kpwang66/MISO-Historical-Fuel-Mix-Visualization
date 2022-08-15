@@ -53,7 +53,7 @@ def get_clean_hist_fuel_mix(link, filename):
 
     return df
 
-if __name__ = '__main__':
+if __name__ == '__main__':
 
     # %% Find SQLite DB or get fresh data
     link = "https://docs.misoenergy.org/marketreports/historical_gen_fuel_mix_2021.xlsx"
